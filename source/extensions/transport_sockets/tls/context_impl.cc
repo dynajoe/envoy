@@ -165,6 +165,9 @@ ContextImpl::ContextImpl(Stats::Scope& scope, const Envoy::Ssl::ContextConfig& c
 
     for (auto& ctx : tls_contexts_) {
       X509_STORE* store = SSL_CTX_get_cert_store(ctx.ssl_ctx_.get());
+      // Enable partial chain for client cert validation
+      // https://github.com/envoyproxy/envoy/pull/22350/files
+      X509_STORE_set_flags(store, X509_V_FLAG_PARTIAL_CHAIN);
       bool has_crl = false;
       for (const X509_INFO* item : list.get()) {
         if (item->x509) {
@@ -218,6 +221,7 @@ ContextImpl::ContextImpl(Stats::Scope& scope, const Envoy::Ssl::ContextConfig& c
 
     for (auto& ctx : tls_contexts_) {
       X509_STORE* store = SSL_CTX_get_cert_store(ctx.ssl_ctx_.get());
+      X509_STORE_set_flags(store, X509_V_FLAG_PARTIAL_CHAIN);
       for (const X509_INFO* item : list.get()) {
         if (item->crl) {
           X509_STORE_add_crl(store, item->crl);
